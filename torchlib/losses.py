@@ -20,6 +20,38 @@ def one_hot_embedding(labels, num_classes):
     return y[labels.long()]     # [N,D]
 
 
+# https://www.kaggle.com/iafoss/pretrained-resnet34-with-rgby-0-460-public-lb
+class FocalLoss(nn.Module):           #<---REVIEW!!!!!!!!!
+    def __init__(self, gamma=2):
+        super().__init__()
+        self.gamma = gamma
+        
+    def forward(self, input, target):
+        if not (target.size() == input.size()):
+            raise ValueError("Target size ({}) must be the same as input size ({})"
+                             .format(target.size(), input.size()))
+
+        max_val = (-input).clamp(min=0)
+        loss = input - input * target + max_val + \
+            ((-max_val).exp() + (-input - max_val).exp()).log()
+
+        invprobs = F.logsigmoid(-input * (target * 2.0 - 1.0))
+        loss = (invprobs * self.gamma).exp() * loss
+        
+        return loss.sum(dim=1).mean()
+
+
+# https://www.kaggle.com/iafoss/pretrained-resnet34-with-rgby-0-460-public-lb
+class MultAccuracyV1(nn.Module):    
+    def __init__(self, th=0.0 ):
+        super(MultAccuracyV1, self).__init__()
+        self.th = th
+
+    def forward(self, yhat, y):
+        """Computes the precision@k for the specified values of k"""
+        yhat = (yhat > self.th).int()
+        y = y.int()
+        return (yhat==y).float().mean()
 
 
 

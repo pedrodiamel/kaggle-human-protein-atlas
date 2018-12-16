@@ -95,7 +95,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
         )
         
         self.size_input = size_input
-        self.accuracy = nloss.TopkAccuracy( topk ) ### <---- !!!DEFINE ACURATE!!!!!
+        self.accuracy = nloss.MultAccuracyV1( topk )  
 
         #self.cnf = nloss.ConfusionMeter( self.num_output_channels, normalized=True )
         #self.visheatmap = gph.HeatMapVisdom( env_name=self.nameproject )
@@ -286,6 +286,8 @@ class NeuralNetClassifier(NeuralNetAbstract):
             self.criterion = nn.MSELoss(size_average=True).cuda()
         elif loss == 'l1':
             self.criterion = nn.L1Loss(size_average=True).cuda()
+        elif loss == 'focal': #<--- review!!!!
+            self.criterion = nloss.FocalLoss( gamma=2 ).cuda() 
         else:
             assert(False)
 
