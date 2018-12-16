@@ -95,14 +95,14 @@ class NeuralNetClassifier(NeuralNetAbstract):
         )
         
         self.size_input = size_input
-        self.accuracy = nloss.TopkAccuracy( topk )
-        self.cnf = nloss.ConfusionMeter( self.num_output_channels, normalized=True )
-        self.visheatmap = gph.HeatMapVisdom( env_name=self.nameproject )
+        self.accuracy = nloss.TopkAccuracy( topk ) ### <---- !!!DEFINE ACURATE!!!!!
+
+        #self.cnf = nloss.ConfusionMeter( self.num_output_channels, normalized=True )
+        #self.visheatmap = gph.HeatMapVisdom( env_name=self.nameproject )
 
         # Set the graphic visualization
-        self.metrics_name =  [ 'top{}'.format(k) for k in topk ]
-        self.logger_train = Logger( 'Trn', ['loss'], self.metrics_name, self.plotter  )
-        self.logger_val   = Logger( 'Val', ['loss'], self.metrics_name, self.plotter )
+        self.logger_train = Logger( 'Trn', ['loss'], ['acc'], self.plotter  )
+        self.logger_val   = Logger( 'Val', ['loss'], ['acc'], self.plotter )
               
 
     
@@ -116,25 +116,23 @@ class NeuralNetClassifier(NeuralNetAbstract):
         self.net.train()
 
         end = time.time()
-        for i, sample in enumerate(data_loader):
+        for i, ( iD, image, prob  ) in enumerate(data_loader):
             
             # measure data loading time
             data_time.update(time.time() - end)
-            # get data (image, label)
-            x, y = sample['image'], sample['label'].argmax(1).long()
+            x, y = image, prob  
             batch_size = x.size(0)
 
             if self.cuda:
                 x = x.cuda() 
-                y = y.cuda() 
-            
+                y = y.cuda()             
 
             # fit (forward)
-            outputs = self.net(x)
+            yhat = self.net(x)
 
             # measure accuracy and record loss
-            loss = self.criterion(outputs, y.long() )            
-            pred = self.accuracy(outputs.data, y )
+            loss = self.criterion( yhat, y  )            
+            pred = self.accuracy( yhat.data, y )
               
             # optimizer
             self.optimizer.zero_grad()
@@ -144,7 +142,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
             # update
             self.logger_train.update(
                 {'loss': loss.data[0] },
-                dict(zip(self.metrics_name, [pred[p][0] for p in range(len(self.metrics_name))  ])),      
+                {'acc': pred.data[0] },
                 batch_size,
                 )
             
@@ -159,7 +157,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
     def evaluate(self, data_loader, epoch=0):
         
         self.logger_val.reset()
-        self.cnf.reset()
+        #self.cnf.reset()
         batch_time = AverageMeter()
         
 
@@ -167,10 +165,10 @@ class NeuralNetClassifier(NeuralNetAbstract):
         self.net.eval()
         with torch.no_grad():
             end = time.time()
-            for i, sample in enumerate(data_loader):
+            for i, (iD, image, prob) in enumerate(data_loader):
                 
                 # get data (image, label)
-                x, y = sample['image'], sample['label'].argmax(1).long()
+                x, y = image, prob #.argmax(1).long()
                 batch_size = x.size(0)
 
                 if self.cuda:
@@ -179,12 +177,13 @@ class NeuralNetClassifier(NeuralNetAbstract):
 
                 
                 # fit (forward)
-                outputs = self.net(x)
+                yhat = self.net(x)
 
                 # measure accuracy and record loss
-                loss = self.criterion(outputs, y )            
-                pred = self.accuracy(outputs.data, y.data )
-                self.cnf.add( outputs.argmax(1), y ) 
+                loss = self.criterion(yhat, y )      
+                pred = self.accuracy(yhat.data, y.data ) 
+
+                #self.cnf.add( outputs.argmax(1), y ) 
 
                 # measure elapsed time
                 batch_time.update(time.time() - end)
@@ -193,7 +192,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
                 # update
                 self.logger_val.update(
                 {'loss': loss.data[0] },
-                dict(zip(self.metrics_name, [pred[p][0] for p in range(len(self.metrics_name))  ])),      
+                {'acc': loss.data[0] },
                 batch_size,
                 )
 
@@ -208,8 +207,8 @@ class NeuralNetClassifier(NeuralNetAbstract):
 
         #save validation loss
         self.vallosses = self.logger_val.info['loss']['loss'].avg
-        acc = self.logger_val.info['metrics']['top1'].avg
-
+        acc = self.logger_val.info['acc']['acc'].avg
+        
         self.logger_val.logger(
             epoch, epoch, i, len(data_loader), 
             batch_time,
@@ -218,82 +217,29 @@ class NeuralNetClassifier(NeuralNetAbstract):
             bsummary=True,
             )
         
-        print('Confusion Matriz')
-        print(self.cnf.value(), flush=True)
-        print('\n')
+        #print('Confusion Matriz')
+        #print(self.cnf.value(), flush=True)
+        #print('\n')
+        #self.visheatmap.show('Confusion Matriz', self.cnf.value())                
         
-        self.visheatmap.show('Confusion Matriz', self.cnf.value())                
         return acc
     
-   
-
-    def test(self, data_loader):
-         
-        n = len(data_loader)*data_loader.batch_size
-        Yhat = np.zeros((n, self.num_output_channels ))
-        Y = np.zeros((n,1) )
-        k=0
-
-        # switch to evaluate mode
-        self.net.eval()
-        with torch.no_grad():
-            end = time.time()
-            for i, sample in enumerate( tqdm(data_loader) ):
-                
-                # get data (image, label)
-                x, y  = sample['image'], sample['label'].argmax(1).long()                                
-                x = x.cuda() if self.cuda else x    
-                                
-                # fit (forward)
-                yhat = self.net(x)
-                yhat = F.softmax(yhat, dim=1)    
-                yhat = pytutils.to_np(yhat)
-    
-                for j in range(yhat.shape[0]):
-                        Y[k] = y[j]
-                        Yhat[k,:] = yhat[j] 
-                        k+=1 
-
-                #print( 'Test:', i , flush=True )
-
-        Yhat = Yhat[:k,:]
-        Y = Y[:k]
-                
-        return Yhat, Y
-    
+        
     def predict(self, data_loader):
-         
-        n = len(data_loader)*data_loader.batch_size
-        Yhat = np.zeros((n, self.num_output_channels ))
-        Ids = np.zeros((n,1) )
-        k=0
-
+        Yhat = []
+        iDs  = []
         # switch to evaluate mode
         self.net.eval()
         with torch.no_grad():
             end = time.time()
-            for i, (Id, inputs) in enumerate( tqdm(data_loader) ):
-                
-                # get data (image, label)
-                #inputs = sample['image']                
-                #Id = sample['id']
-                
-                x = inputs.cuda() if self.cuda else inputs    
-                                
-                # fit (forward)
-                yhat = self.net(x)
-                yhat = F.softmax(yhat, dim=1)    
-                yhat = pytutils.to_np(yhat)
-    
-                for j in range(yhat.shape[0]):
-                        Yhat[k,:] = yhat[j]
-                        Ids[k] = Id[j]  
-                        k+=1 
-
-        Yhat = Yhat[:k,:]
-        Ids = Ids[:k]
-                
-        return Ids, Yhat
+            for i, (iD, image, prob) in enumerate( tqdm(data_loader) ):
+                x = image.cuda() if self.cuda else image                                    
+                yhat = self.net(x).cpu().numpy()
+                Yhat.append( yhat )
+                iDs.append( iD )
+        Yhat = np.stack( Yhat, axis=0 )        
+        iDs = np.stack( iDs, axis=0 )    
+        return iDs, Yhat
       
     def __call__(self, image):        
         
@@ -301,56 +247,10 @@ class NeuralNetClassifier(NeuralNetAbstract):
         self.net.eval()
         with torch.no_grad():
             x = image.cuda() if self.cuda else image 
-            msoft = nn.Softmax()
-            yhat = msoft(self.net(x))
-            yhat = pytutils.to_np(yhat)
-
+            yhat = self.net(x).cpu().numpy()
         return yhat
 
-
-    def representation(self, data_loader):
-        """"
-        Representation
-            -data_loader: simple data loader for image
-        """
-                
-        # switch to evaluate mode
-        self.net.eval()
-
-        n = len(data_loader)*data_loader.batch_size
-        k=0
-
-        # embebed features 
-        embX = np.zeros([n,self.net.dim])
-        embY = np.zeros([n,1])
-
-        batch_time = AverageMeter()
-        end = time.time()
-        for i, sample in enumerate(data_loader):
-                        
-            # get data (image, label)
-            x, y = sample['image'], sample['label'].argmax(1).long()
-            x = x.cuda() if self.cuda else x
-
-            # representation
-            emb = self.net.representation(x)
-            emb = pytutils.to_np(emb)
-            for j in range(emb.shape[0]):
-                embX[k,:] = emb[j,:]
-                embY[k] = y[j]
-                k+=1
-
-            # measure elapsed time
-            batch_time.update(time.time() - end)
-            end = time.time()
-
-            print('Representation: |{:06d}/{:06d}||{batch_time.val:.3f} ({batch_time.avg:.3f})|'.format(i,len(data_loader), batch_time=batch_time) )
-
-
-        embX = embX[:k,:]
-        embY = embY[:k]
-
-        return embX, embY
+  
     
     def _create_model(self, arch, num_output_channels, num_input_channels, pretrained):
         """
@@ -392,8 +292,3 @@ class NeuralNetClassifier(NeuralNetAbstract):
         self.s_loss = loss
 
 
-
-
-
-
- 
