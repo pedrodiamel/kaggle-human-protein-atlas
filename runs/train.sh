@@ -9,7 +9,7 @@ BATCHSIZE=128
 LEARNING_RATE=0.1
 MOMENTUM=0.9
 PRINT_FREQ=100
-WORKERS=10
+WORKERS=1 #10
 RESUME='chk000000.pth.tar'
 GPU=1
 ARCH='preactresnet18'
@@ -51,7 +51,7 @@ $DATA \
 --name-dataset=$NAMEDATASET \
 --channels=$NUMCHANNELS \
 --image-size=$IMAGESIZE \
---parallel \
 --finetuning \
 2>&1 | tee -a $PROJECT/$EXP_NAME/$EXP_NAME.log \
 
+#--parallel \

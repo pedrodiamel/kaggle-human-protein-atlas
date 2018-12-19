@@ -21,7 +21,8 @@ def one_hot_embedding(labels, num_classes):
 
 
 # https://www.kaggle.com/iafoss/pretrained-resnet34-with-rgby-0-460-public-lb
-class FocalLoss(nn.Module):           #<---REVIEW!!!!!!!!!
+# https://arxiv.org/pdf/1708.02002.pdf
+class FocalLoss(nn.Module):
     def __init__(self, gamma=2):
         super().__init__()
         self.gamma = gamma

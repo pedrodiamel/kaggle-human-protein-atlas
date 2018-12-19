@@ -22,7 +22,7 @@ def make_dataset( path, metadata, train=True):
         def fill_targets(row):
             target = np.array(row.Target.split(" ")).astype(np.int)
             p = np.zeros( 28 )
-            p[target] = 1/len(target)
+            p[target] = 1  #/len(target)  #<- !!!! P(W,X)
             row.Target = p
             return row
         data = data.apply(fill_targets, axis=1)

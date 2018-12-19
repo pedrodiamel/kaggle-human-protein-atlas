@@ -286,7 +286,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
             self.criterion = nn.MSELoss(size_average=True).cuda()
         elif loss == 'l1':
             self.criterion = nn.L1Loss(size_average=True).cuda()
-        elif loss == 'focal': #<--- review!!!!
+        elif loss == 'focal': #<--- focal loss 
             self.criterion = nloss.FocalLoss( gamma=2 ).cuda() 
         else:
             assert(False)
