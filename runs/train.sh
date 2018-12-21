@@ -5,22 +5,22 @@ DATA=$HOME/.kaggle/competitions/human-protein-atlas-image-classification
 NAMEDATASET='atlas'
 PROJECT='../out/netruns'
 EPOCHS=1000
-BATCHSIZE=1 #128
+BATCHSIZE=64 #128
 LEARNING_RATE=0.1
 MOMENTUM=0.9
 PRINT_FREQ=100
 WORKERS=1 #10
 RESUME='chk000000.pth.tar'
-GPU=1
+GPU=0
 ARCH='preactresnet18'
 LOSS='mse'
 OPT='sgd'
 SCHEDULER='step'
 SNAPSHOT=5
-NUMCLASS=10
-NUMCHANNELS=4
+NUMCLASS=28
+NUMCHANNELS=3 #4
 IMAGESIZE=32
-EXP_NAME='baseline_'$ARCH'_'$LOSS'_'$OPT'_'$NAMEDATASET'_001'
+EXP_NAME='atlas_baseline_'$ARCH'_'$LOSS'_'$OPT'_'$NAMEDATASET'_001'
 
 
 rm -rf $PROJECT/$EXP_NAME/$EXP_NAME.log
@@ -51,7 +51,6 @@ $DATA \
 --name-dataset=$NAMEDATASET \
 --channels=$NUMCHANNELS \
 --image-size=$IMAGESIZE \
+--parallel \
 --finetuning \
 2>&1 | tee -a $PROJECT/$EXP_NAME/$EXP_NAME.log \
-
-#--parallel \

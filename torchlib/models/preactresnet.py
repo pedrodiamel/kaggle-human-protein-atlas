@@ -137,11 +137,11 @@ def preactresnet152(pretrained=False, **kwargs):
 
 
 def test():
-    num_channels=1
-    num_classes=10
+    num_channels=4
+    num_classes=28
     net = preactresnet18( False, num_classes=num_classes, num_channels=num_channels )
     y = net(Variable(torch.randn(1,num_channels,32,32)))
     print(y.size())
 
-# test()
+#test()
 

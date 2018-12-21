@@ -115,7 +115,7 @@ def main():
         optimizer=args.opt,
         lrsch=args.scheduler,
         pretrained=args.finetuning,
-        topk=(1, ),
+        th=0.0,
         size_input=args.image_size,
         )
     

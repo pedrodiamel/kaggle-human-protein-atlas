@@ -2,7 +2,7 @@
 
 
 # dataloader 
-from dataprovide import ATLASProvide
+from .dataprovide import ATLASProvide
 from pytvision.transforms.aumentation import ObjectImageTransform
 
 train = 'train'
@@ -79,11 +79,15 @@ class ATLASDataset(object):
     def __getitem__(self, idx):   
         idx = idx % len(self.data)
         iD, image, prob = self.data[idx]
+        image = image[:,:,:3]
                 
         obj = ObjectImageTransform( image )
         if self.transform: 
             obj = self.transform( obj )
         image = obj.to_value()
+        
+        #print(image.shape, flush=True )
+        #assert(False)
         
         return iD, image, prob 
     

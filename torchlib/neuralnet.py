@@ -61,8 +61,8 @@ class NeuralNetClassifier(NeuralNetAbstract):
         momentum=0.9,
         weight_decay=5e-4,        
         pretrained=False,
-        topk=(1,),
-        size_input=128,
+        th=0.0,
+        size_input=32,
         ):
         """
         Create
@@ -95,7 +95,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
         )
         
         self.size_input = size_input
-        self.accuracy = nloss.MultAccuracyV1( topk )  
+        self.accuracy = nloss.MultAccuracyV1( th )  
 
         #self.cnf = nloss.ConfusionMeter( self.num_output_channels, normalized=True )
         #self.visheatmap = gph.HeatMapVisdom( env_name=self.nameproject )
@@ -131,8 +131,8 @@ class NeuralNetClassifier(NeuralNetAbstract):
             yhat = self.net(x)
 
             # measure accuracy and record loss
-            loss = self.criterion( yhat, y  )            
-            pred = self.accuracy( yhat.data, y )
+            loss = self.criterion( yhat, y.float()  )            
+            pred = self.accuracy( yhat.data, y.data )
               
             # optimizer
             self.optimizer.zero_grad()
@@ -174,13 +174,12 @@ class NeuralNetClassifier(NeuralNetAbstract):
                 if self.cuda:
                     x = x.cuda() 
                     y = y.cuda() 
-
                 
                 # fit (forward)
                 yhat = self.net(x)
 
                 # measure accuracy and record loss
-                loss = self.criterion(yhat, y )      
+                loss = self.criterion(yhat, y.float() )      
                 pred = self.accuracy(yhat.data, y.data ) 
 
                 #self.cnf.add( outputs.argmax(1), y ) 
@@ -192,7 +191,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
                 # update
                 self.logger_val.update(
                 {'loss': loss.data[0] },
-                {'acc': loss.data[0] },
+                {'acc': pred.data[0] },
                 batch_size,
                 )
 
@@ -207,7 +206,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
 
         #save validation loss
         self.vallosses = self.logger_val.info['loss']['loss'].avg
-        acc = self.logger_val.info['acc']['acc'].avg
+        acc = self.logger_val.info['metrics']['acc'].avg
         
         self.logger_val.logger(
             epoch, epoch, i, len(data_loader), 

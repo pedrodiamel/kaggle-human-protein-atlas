@@ -46,11 +46,11 @@ class FocalLoss(nn.Module):
 class MultAccuracyV1(nn.Module):    
     def __init__(self, th=0.0 ):
         super(MultAccuracyV1, self).__init__()
-        self.th = th
+        self.th=th
 
     def forward(self, yhat, y):
-        """Computes the precision@k for the specified values of k"""
-        yhat = (yhat > self.th).int()
+        """Computes the precision@k for the specified values of k"""       
+        yhat = (yhat > self.th ).int()
         y = y.int()
         return (yhat==y).float().mean()
 
