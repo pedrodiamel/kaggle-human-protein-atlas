@@ -20,34 +20,41 @@ def one_hot_embedding(labels, num_classes):
     return y[labels.long()]     # [N,D]
 
 
+def flatten(x):        
+    x_flat = x.clone()
+    x_flat = x_flat.view(x.shape[0], -1)
+    return x_flat
+
+
+
 # https://www.kaggle.com/iafoss/pretrained-resnet34-with-rgby-0-460-public-lb
 # https://arxiv.org/pdf/1708.02002.pdf
-#class FocalLoss(nn.Module):
-#    def __init__(self, gamma=2):
-#        super().__init__()
-#        self.gamma = gamma
-#        
-#    def forward(self, input, target):
-#        if not (target.size() == input.size()):
-#            raise ValueError("Target size ({}) must be the same as input size ({})"
-#                             .format(target.size(), input.size()))
-#
-#        max_val = (-input).clamp(min=0)
-#        loss = input - input * target + max_val + \
-#            ((-max_val).exp() + (-input - max_val).exp()).log()
-#
-#        invprobs = F.logsigmoid(-input * (target * 2.0 - 1.0))
-#        loss = (invprobs * self.gamma).exp() * loss
-#        
-#        return loss.sum(dim=1).mean()
-
 class FocalLoss(nn.Module):
+    def __init__(self, gamma=2):
+        super().__init__()
+        self.gamma = gamma
+        
+    def forward(self, input, target):
+        if not (target.size() == input.size()):
+            raise ValueError("Target size ({}) must be the same as input size ({})"
+                             .format(target.size(), input.size()))
+
+        max_val = (-input).clamp(min=0)
+        loss = input - input * target + max_val + \
+            ((-max_val).exp() + (-input - max_val).exp()).log()
+
+        invprobs = F.logsigmoid(-input * (target * 2.0 - 1.0))
+        loss = (invprobs * self.gamma).exp() * loss
+        
+        return loss.sum(dim=1).mean()
+
+class FocalLossV2(nn.Module):
     def __init__(self, gamma=2):
         super().__init__()
         self.gamma = gamma        
 
     def forward(self, y_pred, y_true):
-        n, c = y_pred.size()       
+        #n, c = y_pred.size()       
         y_pred_log =  F.logsigmoid(y_pred)
         weight = (1 - F.sigmoid(y_pred) ) ** self.gamma
         
@@ -95,7 +102,7 @@ class DiceLoss(nn.Module):
         
     def forward(self, y_pred, y_true, weight=None ):
         
-        #_pred = self.sigmoid(y_pred)
+        y_pred = F.sigmoid(y_pred)
         smooth = 1.
         y_true_f = flatten(y_true)
         y_pred_f = flatten(y_pred)
@@ -111,6 +118,8 @@ class MultAccuracyV1(nn.Module):
 
     def forward(self, yhat, y):
         """Computes the precision@k for the specified values of k"""       
+        
+        yhat = F.sigmoid(yhat)
         yhat = (yhat > self.th ).int()
         y = y.int()
         return (yhat==y).float().mean()

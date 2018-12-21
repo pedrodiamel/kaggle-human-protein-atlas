@@ -79,7 +79,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
         """
 
         cfg_opt= { 'momentum':0.9, 'weight_decay':5e-4 } 
-        cfg_scheduler= { 'step_size':100, 'gamma':0.1  }
+        cfg_scheduler= { 'step_size':10, 'gamma':0.1  }
                     
         super(NeuralNetClassifier, self).create( 
             arch, 
@@ -129,7 +129,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
 
             # fit (forward)
             yhat = self.net(x)
-            yhat = F.sigmoid(yhat)
+            #yhat = F.sigmoid(yhat)
 
             # measure accuracy and record loss
             loss = self.criterion( yhat, y.float()  )            
@@ -137,7 +137,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
               
             # optimizer
             self.optimizer.zero_grad()
-            (loss * batch_size ).backward()
+            (loss ).backward() # *batch_size
             self.optimizer.step()
                       
             # update
@@ -178,7 +178,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
                 
                 # fit (forward)
                 yhat = self.net(x)
-                yhat = F.sigmoid(yhat)
+                #yhat = F.sigmoid(yhat)
 
                 # measure accuracy and record loss
                 loss = self.criterion(yhat, y.float() )      
@@ -291,7 +291,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
             self.criterion = nn.MSELoss(size_average=True).cuda()
         elif loss == 'l1':
             self.criterion = nn.L1Loss(size_average=True).cuda()
-        elif loss == 'focal': #<--- focal loss 
+        elif loss == 'focal': 
             self.criterion = nloss.FocalLoss( gamma=2 ).cuda() 
         elif loss == 'dice':  
             self.criterion = nloss.DiceLoss( ).cuda()        

@@ -83,7 +83,7 @@ class ATLASDataset(object):
         iD, image, prob = self.data[idx]
         image = (image[:,:,:3]*255).astype( np.uint8 )
         #image = utility.to_channels(image, 3)
-        #image = np.array(image)
+        #image = (image*255).astype( np.uint8 )
         
         #print(image.shape, flush=True )
         #print(image.min(), image.max(), flush=True )
