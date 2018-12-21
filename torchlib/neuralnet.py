@@ -129,6 +129,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
 
             # fit (forward)
             yhat = self.net(x)
+            yhat = F.sigmoid(yhat)
 
             # measure accuracy and record loss
             loss = self.criterion( yhat, y.float()  )            
@@ -136,7 +137,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
               
             # optimizer
             self.optimizer.zero_grad()
-            loss.backward()
+            (loss * batch_size ).backward()
             self.optimizer.step()
                       
             # update
@@ -177,6 +178,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
                 
                 # fit (forward)
                 yhat = self.net(x)
+                yhat = F.sigmoid(yhat)
 
                 # measure accuracy and record loss
                 loss = self.criterion(yhat, y.float() )      

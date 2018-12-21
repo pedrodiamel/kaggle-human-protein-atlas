@@ -1,9 +1,11 @@
 
 
 
-# dataloader 
+import numpy as np
 from .dataprovide import ATLASProvide
 from pytvision.transforms.aumentation import ObjectImageTransform
+from pytvision.datasets import utility 
+
 
 train = 'train'
 validation = 'train'
@@ -79,8 +81,14 @@ class ATLASDataset(object):
     def __getitem__(self, idx):   
         idx = idx % len(self.data)
         iD, image, prob = self.data[idx]
-        image = image[:,:,:3]
-                
+        image = (image[:,:,:3]*255).astype( np.uint8 )
+        #image = utility.to_channels(image, 3)
+        #image = np.array(image)
+        
+        #print(image.shape, flush=True )
+        #print(image.min(), image.max(), flush=True )
+        #assert(False)
+            
         obj = ObjectImageTransform( image )
         if self.transform: 
             obj = self.transform( obj )

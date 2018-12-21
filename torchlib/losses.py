@@ -22,26 +22,72 @@ def one_hot_embedding(labels, num_classes):
 
 # https://www.kaggle.com/iafoss/pretrained-resnet34-with-rgby-0-460-public-lb
 # https://arxiv.org/pdf/1708.02002.pdf
+#class FocalLoss(nn.Module):
+#    def __init__(self, gamma=2):
+#        super().__init__()
+#        self.gamma = gamma
+#        
+#    def forward(self, input, target):
+#        if not (target.size() == input.size()):
+#            raise ValueError("Target size ({}) must be the same as input size ({})"
+#                             .format(target.size(), input.size()))
+#
+#        max_val = (-input).clamp(min=0)
+#        loss = input - input * target + max_val + \
+#            ((-max_val).exp() + (-input - max_val).exp()).log()
+#
+#        invprobs = F.logsigmoid(-input * (target * 2.0 - 1.0))
+#        loss = (invprobs * self.gamma).exp() * loss
+#        
+#        return loss.sum(dim=1).mean()
+
 class FocalLoss(nn.Module):
     def __init__(self, gamma=2):
         super().__init__()
-        self.gamma = gamma
+        self.gamma = gamma        
+
+    def forward(self, y_pred, y_true):
+        n, c = y_pred.size()       
+        y_pred_log =  F.logsigmoid(y_pred)
+        weight = (1 - F.sigmoid(y_pred) ) ** self.gamma
         
-    def forward(self, input, target):
-        if not (target.size() == input.size()):
-            raise ValueError("Target size ({}) must be the same as input size ({})"
-                             .format(target.size(), input.size()))
-
-        max_val = (-input).clamp(min=0)
-        loss = input - input * target + max_val + \
-            ((-max_val).exp() + (-input - max_val).exp()).log()
-
-        invprobs = F.logsigmoid(-input * (target * 2.0 - 1.0))
-        loss = (invprobs * self.gamma).exp() * loss
+        logpy = torch.sum( weight * y_pred_log * y_true, dim=1 )
+        loss  = -torch.mean(logpy)
+        return loss
         
-        return loss.sum(dim=1).mean()
+        
+# credits: https://www.kaggle.com/guglielmocamporese/macro-f1-score-keras
 
+#def f1(y_true, y_pred):
+#    #y_pred = K.round(y_pred)
+#    y_pred = K.cast(K.greater(K.clip(y_pred, 0, 1), THRESHOLD), K.floatx())
+#    tp = K.sum(K.cast(y_true*y_pred, 'float'), axis=0)
+#    tn = K.sum(K.cast((1-y_true)*(1-y_pred), 'float'), axis=0)
+#    fp = K.sum(K.cast((1-y_true)*y_pred, 'float'), axis=0)
+#    fn = K.sum(K.cast(y_true*(1-y_pred), 'float'), axis=0)
+#
+#    p = tp / (tp + fp + K.epsilon())
+#    r = tp / (tp + fn + K.epsilon())
+#
+#    f1 = 2*p*r / (p+r+K.epsilon())
+#    f1 = tf.where(tf.is_nan(f1), tf.zeros_like(f1), f1)
+#    return K.mean(f1)
 
+#def f1_loss(y_true, y_pred):   
+#    #y_pred = K.cast(K.greater(K.clip(y_pred, 0, 1), THRESHOLD), K.floatx())
+#    tp = K.sum(K.cast(y_true*y_pred, 'float'), axis=0)
+#    tn = K.sum(K.cast((1-y_true)*(1-y_pred), 'float'), axis=0)
+#    fp = K.sum(K.cast((1-y_true)*y_pred, 'float'), axis=0)
+#    fn = K.sum(K.cast(y_true*(1-y_pred), 'float'), axis=0)
+#
+#    p = tp / (tp + fp + K.epsilon())
+#    r = tp / (tp + fn + K.epsilon())
+#
+#    f1 = 2*p*r / (p+r+K.epsilon())
+#    f1 = tf.where(tf.is_nan(f1), tf.zeros_like(f1), f1)
+#    return 1-K.mean(f1)
+
+    
 # https://www.kaggle.com/iafoss/pretrained-resnet34-with-rgby-0-460-public-lb
 class MultAccuracyV1(nn.Module):    
     def __init__(self, th=0.0 ):
