@@ -227,28 +227,32 @@ class NeuralNetClassifier(NeuralNetAbstract):
     
         
     def predict(self, data_loader):
-        Yhat = []
-        iDs  = []
+        Yhat, iDs, Y  = [], [], []
         # switch to evaluate mode
         self.net.eval()
         with torch.no_grad():
             end = time.time()
             for i, (iD, image, prob) in enumerate( tqdm(data_loader) ):
                 x = image.cuda() if self.cuda else image                                    
-                yhat = self.net(x).cpu().numpy()
+                yhat = self.net(x)
+                yhat = F.sigmoid(yhat).cpu().numpy()
                 Yhat.append( yhat )
                 iDs.append( iD )
-        Yhat = np.stack( Yhat, axis=0 )        
-        iDs = np.stack( iDs, axis=0 )    
-        return iDs, Yhat
-      
+                Y.append(prob)
+        Yhat = np.concatenate( Yhat, axis=0 )        
+        iDs = np.concatenate( iDs, axis=0 )   
+        Y = np.concatenate( Y, axis=0 )  
+        return iDs, Yhat, Y
+    
+    
     def __call__(self, image):        
         
         # switch to evaluate mode
         self.net.eval()
         with torch.no_grad():
             x = image.cuda() if self.cuda else image 
-            yhat = self.net(x).cpu().numpy()
+            yhat = self.net(x)
+            yhat = F.sigmoid(yhat).cpu().numpy()
         return yhat
 
   
@@ -289,6 +293,8 @@ class NeuralNetClassifier(NeuralNetAbstract):
             self.criterion = nn.L1Loss(size_average=True).cuda()
         elif loss == 'focal': #<--- focal loss 
             self.criterion = nloss.FocalLoss( gamma=2 ).cuda() 
+        elif loss == 'dice':  
+            self.criterion = nloss.DiceLoss( ).cuda()        
         else:
             assert(False)
 

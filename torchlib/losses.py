@@ -87,6 +87,21 @@ class FocalLoss(nn.Module):
 #    f1 = tf.where(tf.is_nan(f1), tf.zeros_like(f1), f1)
 #    return 1-K.mean(f1)
 
+
+class DiceLoss(nn.Module):
+    
+    def __init__(self):
+        super(DiceLoss, self).__init__()
+        
+    def forward(self, y_pred, y_true, weight=None ):
+        
+        #_pred = self.sigmoid(y_pred)
+        smooth = 1.
+        y_true_f = flatten(y_true)
+        y_pred_f = flatten(y_pred)
+        score = (2. * torch.sum(y_true_f * y_pred_f) + smooth) / (torch.sum(y_true_f) + torch.sum(y_pred_f) + smooth)
+        return 1. - score
+
     
 # https://www.kaggle.com/iafoss/pretrained-resnet34-with-rgby-0-460-public-lb
 class MultAccuracyV1(nn.Module):    
