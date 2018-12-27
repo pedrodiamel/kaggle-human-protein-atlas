@@ -81,8 +81,9 @@ class ATLASDataset(object):
     def __getitem__(self, idx):   
         idx = idx % len(self.data)
         iD, image, prob = self.data[idx]
-        image = (image[:,:,:3]*255).astype( np.uint8 )
-        #image = utility.to_channels(image, 3)
+        #image = (image[:,:,:3 ]*255).astype( np.uint8 )
+        image = (image[:,:, 0 ]*255).astype( np.uint8 )
+        image = utility.to_channels(image, 3)
         #image = (image*255).astype( np.uint8 )
         
         #print(image.shape, flush=True )

@@ -48,6 +48,9 @@ class FocalLoss(nn.Module):
         
         return loss.sum(dim=1).mean()
 
+
+    
+    
 class FocalLossV2(nn.Module):
     def __init__(self, gamma=2):
         super().__init__()

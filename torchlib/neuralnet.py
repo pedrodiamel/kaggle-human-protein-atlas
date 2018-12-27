@@ -79,7 +79,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
         """
 
         cfg_opt= { 'momentum':0.9, 'weight_decay':5e-4 } 
-        cfg_scheduler= { 'step_size':10, 'gamma':0.1  }
+        cfg_scheduler= { 'step_size':100, 'gamma':0.1  }
                     
         super(NeuralNetClassifier, self).create( 
             arch, 
@@ -289,6 +289,8 @@ class NeuralNetClassifier(NeuralNetAbstract):
             self.criterion = nn.CrossEntropyLoss().cuda()
         elif loss == 'mse':
             self.criterion = nn.MSELoss(size_average=True).cuda()
+        elif loss == 'bcewl':
+            self.criterion = nn.BCEWithLogitsLoss(size_average=True).cuda()            
         elif loss == 'l1':
             self.criterion = nn.L1Loss(size_average=True).cuda()
         elif loss == 'focal': 
