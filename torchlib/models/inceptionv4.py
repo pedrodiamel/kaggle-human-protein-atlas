@@ -4,7 +4,7 @@ import torch.utils.model_zoo as model_zoo
 import os
 import sys
 
-from torchlib.netmodels import utility as utl
+from . import utils as utl
 
 __all__ = ['InceptionV4', 'inception_v4']
 
@@ -256,7 +256,7 @@ class Inception_C(nn.Module):
 
 class InceptionV4(nn.Module):
 
-    def __init__(self, num_classes=1001, num_channels=3, transform_input=False):
+    def __init__(self, num_classes=1001, num_channels=3, transform_input=True):
         super(InceptionV4, self).__init__()
         
         self.transform_input = transform_input and num_channels == 3 

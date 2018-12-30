@@ -45,16 +45,13 @@ To use Visdom in the browser:
     jupyter notebook --port 8080 --allow-root --ip 0.0.0.0 --no-browser
 
 
-
-
-
 # Links 
 
 
 - https://www.kaggle.com/iafoss/pretrained-resnet34-with-rgby-0-460-public-lb
 - https://github.com/spytensor/kaggle_human_protein_baseline
 - https://github.com/raytroop/human-protein-atlas-image-classification
-
+- https://github.com/Cadene/pretrained-models.pytorch
 
 
 # Credits

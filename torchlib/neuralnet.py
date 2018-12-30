@@ -79,7 +79,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
         """
 
         cfg_opt= { 'momentum':0.9, 'weight_decay':5e-4 } 
-        cfg_scheduler= { 'step_size':30, 'gamma':0.1  }
+        cfg_scheduler= { 'step_size':10, 'gamma':0.1  }
                     
         super(NeuralNetClassifier, self).create( 
             arch, 
