@@ -19,7 +19,6 @@ def one_hot_embedding(labels, num_classes):
     y = torch.eye(num_classes)  # [D,D]
     return y[labels.long()]     # [N,D]
 
-
 def flatten(x):        
     x_flat = x.clone()
     x_flat = x_flat.view(x.shape[0], -1)
@@ -48,26 +47,21 @@ class FocalLoss(nn.Module):
         
         return loss.sum(dim=1).mean()
 
-
-    
     
 class FocalLossV2(nn.Module):
     def __init__(self, gamma=2):
         super().__init__()
         self.gamma = gamma        
 
-    def forward(self, y_pred, y_true):
-        #n, c = y_pred.size()       
+    def forward(self, y_pred, y_true):    
         y_pred_log =  F.logsigmoid(y_pred)
-        weight = (1 - F.sigmoid(y_pred) ) ** self.gamma
-        
+        weight = (1 - F.sigmoid(y_pred) ) ** self.gamma        
         logpy = torch.sum( weight * y_pred_log * y_true, dim=1 )
         loss  = -torch.mean(logpy)
         return loss
         
         
 # credits: https://www.kaggle.com/guglielmocamporese/macro-f1-score-keras
-
 #def f1(y_true, y_pred):
 #    #y_pred = K.round(y_pred)
 #    y_pred = K.cast(K.greater(K.clip(y_pred, 0, 1), THRESHOLD), K.floatx())
@@ -98,13 +92,11 @@ class FocalLossV2(nn.Module):
 #    return 1-K.mean(f1)
 
 
-class DiceLoss(nn.Module):
-    
+class DiceLoss(nn.Module):    
     def __init__(self):
         super(DiceLoss, self).__init__()
         
     def forward(self, y_pred, y_true, weight=None ):
-        
         y_pred = F.sigmoid(y_pred)
         smooth = 1.
         y_true_f = flatten(y_true)
@@ -112,6 +104,27 @@ class DiceLoss(nn.Module):
         score = (2. * torch.sum(y_true_f * y_pred_f) + smooth) / (torch.sum(y_true_f) + torch.sum(y_pred_f) + smooth)
         return 1. - score
 
+    
+class MixLoss(nn.Module):
+    
+    def __init__(self, alpha=1.0, gamma=1.0):
+        super(MixLoss, self).__init__()
+        self.loss_mce = nn.BCEWithLogitsLoss( size_average=True )
+        self.loss_dice = DiceLoss()    
+        #self.loss_focal = FocalLoss()
+                
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, y_pred, y_true ):
+        alpha = self.alpha
+        gamma = self.gamma
+        loss_m  = self.loss_mce( y_pred, y_true)    
+        loss_d  = self.loss_dice( y_pred, y_true )     
+        #loss_f  = self.loss_focal( y_pred, y_true )         
+        loss = alpha*loss_m + gamma*loss_d
+        return loss
+    
     
 # https://www.kaggle.com/iafoss/pretrained-resnet34-with-rgby-0-460-public-lb
 class MultAccuracyV1(nn.Module):    
@@ -131,7 +144,6 @@ class MultAccuracyV1(nn.Module):
 
 
 ## Baseline clasification
-
 class TopkAccuracy(nn.Module):
     
     def __init__(self, topk=(1,)):

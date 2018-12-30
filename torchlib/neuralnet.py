@@ -79,7 +79,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
         """
 
         cfg_opt= { 'momentum':0.9, 'weight_decay':5e-4 } 
-        cfg_scheduler= { 'step_size':100, 'gamma':0.1  }
+        cfg_scheduler= { 'step_size':30, 'gamma':0.1  }
                     
         super(NeuralNetClassifier, self).create( 
             arch, 
@@ -296,7 +296,9 @@ class NeuralNetClassifier(NeuralNetAbstract):
         elif loss == 'focal': 
             self.criterion = nloss.FocalLoss( gamma=2 ).cuda() 
         elif loss == 'dice':  
-            self.criterion = nloss.DiceLoss( ).cuda()        
+            self.criterion = nloss.DiceLoss( ).cuda()       
+        elif loss == 'mix':  
+            self.criterion = nloss.MixLoss( ).cuda()             
         else:
             assert(False)
 

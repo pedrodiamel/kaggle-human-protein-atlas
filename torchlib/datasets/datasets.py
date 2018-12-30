@@ -82,9 +82,10 @@ class ATLASDataset(object):
         idx = idx % len(self.data)
         iD, image, prob = self.data[idx]
         #image = (image[:,:,:3 ]*255).astype( np.uint8 )
-        image = (image[:,:, 0 ]*255).astype( np.uint8 )
-        image = utility.to_channels(image, 3)
-        #image = (image*255).astype( np.uint8 )
+        #image = (image[:,:, 0 ]*255).astype( np.uint8 )
+        image = np.stack( (  image[:,:,0], image[:,:,1]/2 + image[:,:,3]/2, image[:,:,2]/2 + image[:,:,3]/2  ), axis=-1 )
+        #image = utility.to_channels(image, 3)
+        image = (image*255).astype( np.uint8 )
         
         #print(image.shape, flush=True )
         #print(image.min(), image.max(), flush=True )

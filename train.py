@@ -137,7 +137,7 @@ def main():
         train=True,
         folders_images='train', 
         metadata='train.csv',
-        count=100000,
+        count=50000,
         num_channels=args.channels,
         transform=get_transforms_aug( network.size_input ), #get_transforms_aug
         )
@@ -153,7 +153,7 @@ def main():
         train=True,
         folders_images='train', 
         metadata='train.csv',
-        count=1000,
+        count=5000,
         num_channels=args.channels,
         transform=get_transforms_det( network.size_input ),
         )

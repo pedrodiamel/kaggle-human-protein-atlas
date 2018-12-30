@@ -103,7 +103,7 @@ class ResNet(nn.Module):
 
         self.num_classes = num_classes
         self.num_channels = num_channels
-        self.size_input=224 
+        self.size_input=224
         self.dim = initial_channels*8*block.expansion
 
         self.conv1 = nn.Conv2d(num_channels, initial_channels, kernel_size=7, stride=2, padding=3, bias=False)
