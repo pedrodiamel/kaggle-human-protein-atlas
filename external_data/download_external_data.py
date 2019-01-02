@@ -5,6 +5,7 @@ from tqdm import tqdm
 import requests
 import pandas as pd
 from PIL import Image
+import shutil
 
 def download(pid, image_list, base_url, save_dir, image_size=(512, 512)):
     colors = ['red', 'green', 'blue', 'yellow']
@@ -29,9 +30,11 @@ if __name__ == '__main__':
     # Parameters
     process_num = 24
     image_size = (512, 512)
+    path_dataout = os.path.expanduser( '~/.kaggle/competitions/human-protein-atlas-image-classification' )
     url = 'http://v18.proteinatlas.org/images/'
     csv_path =  "HPAv18RBGY_wodpl.csv"
-    save_dir = "data"
+    save_name = 'train_external'
+    save_dir =  os.path.join(path_dataout, save_name ) 
 
     # Create the directory to save the images in case it doesn't exist
     try:
@@ -42,7 +45,7 @@ if __name__ == '__main__':
         pass
 
     print('Parent process %s.' % os.getpid())
-    img_list = pd.read_csv(csv_path)['Id']
+    img_list = pd.read_csv( csv_path )['Id']
     list_len = len(img_list)
     p = Pool(process_num)
     for i in range(process_num):
@@ -51,8 +54,17 @@ if __name__ == '__main__':
         process_images = img_list[start:end]
         p.apply_async(
             download, args=(str(i), process_images, url, save_dir, image_size)
-        )
+        )   
     print('Waiting for all subprocesses done...')
     p.close()
     p.join()
     print('All subprocesses done.')
+    
+    print('Copy csv file...')
+    shutil.copy( csv_path, os.path.join( path_dataout, '{}.csv'.format(save_name)  ) )
+    
+    
+    #fusion datasets
+    # ...
+    
+    print('DONE!!!')

@@ -26,9 +26,31 @@ def flatten(x):
 
 
 
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=0.25,gamma=2):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, x, y):
+        '''Focal loss.
+        Args:
+          x: (tensor) sized [N,D].
+          y: (tensor) sized [N,].
+        Return:
+          (tensor) focal loss.
+        '''
+        t = Variable(y).cuda()  # [N,20]
+        p = x.sigmoid()
+        pt = p*t + (1-p)*(1-t)         # pt = p if t > 0 else 1-p
+        w = self.alpha*t + (1-self.alpha)*(1-t)  # w = alpha if t > 0 else 1-alpha
+        w = w * (1-pt).pow(self.gamma)
+        return F.binary_cross_entropy_with_logits(x, t, w, size_average=False)
+
+
 # https://www.kaggle.com/iafoss/pretrained-resnet34-with-rgby-0-460-public-lb
 # https://arxiv.org/pdf/1708.02002.pdf
-class FocalLoss(nn.Module):
+class FocalLossV1(nn.Module):
     def __init__(self, gamma=2):
         super().__init__()
         self.gamma = gamma
@@ -43,24 +65,25 @@ class FocalLoss(nn.Module):
             ((-max_val).exp() + (-input - max_val).exp()).log()
 
         invprobs = F.logsigmoid(-input * (target * 2.0 - 1.0))
-        loss = (invprobs * self.gamma).exp() * loss
-        
+        loss = (invprobs * self.gamma).exp() * loss        
         return loss.sum(dim=1).mean()
 
     
 class FocalLossV2(nn.Module):
     def __init__(self, gamma=2):
         super().__init__()
-        self.gamma = gamma        
-
-    def forward(self, y_pred, y_true):    
+        self.gamma = gamma 
+        
+    def forward(self, y_pred, y_true):           
         y_pred_log =  F.logsigmoid(y_pred)
         weight = (1 - F.sigmoid(y_pred) ) ** self.gamma        
         logpy = torch.sum( weight * y_pred_log * y_true, dim=1 )
         loss  = -torch.mean(logpy)
         return loss
         
-        
+
+
+
 # credits: https://www.kaggle.com/guglielmocamporese/macro-f1-score-keras
 #def f1(y_true, y_pred):
 #    #y_pred = K.round(y_pred)
@@ -90,6 +113,21 @@ class FocalLossV2(nn.Module):
 #    f1 = 2*p*r / (p+r+K.epsilon())
 #    f1 = tf.where(tf.is_nan(f1), tf.zeros_like(f1), f1)
 #    return 1-K.mean(f1)
+
+def f1_loss(logits, labels):
+    eps = 1e-6
+    beta = 2
+    batch_size = logits.size()[0]
+    p = F.sigmoid(logits)
+    l = labels
+    num_pos = torch.sum(p, 1) + eps
+    num_pos_hat = torch.sum(l, 1) + eps
+    tp = torch.sum(l * p, 1)
+    precise = tp / num_pos
+    recall  = tp / num_pos_hat
+    fs = (1 + beta * beta) * precise * recall / (beta * beta * precise + recall + eps)
+    loss = fs.sum() / batch_size
+    return (1 - loss)
 
 
 class DiceLoss(nn.Module):    
@@ -128,7 +166,7 @@ class MixLoss(nn.Module):
     
 # https://www.kaggle.com/iafoss/pretrained-resnet34-with-rgby-0-460-public-lb
 class MultAccuracyV1(nn.Module):    
-    def __init__(self, th=0.0 ):
+    def __init__(self, th=0.5 ):
         super(MultAccuracyV1, self).__init__()
         self.th=th
 
@@ -139,6 +177,33 @@ class MultAccuracyV1(nn.Module):
         yhat = (yhat > self.th ).int()
         y = y.int()
         return (yhat==y).float().mean()
+
+    
+class F_score(nn.Module):    
+    def __init__(self, threshold=0.5, beta=2 ):
+        super(F_score, self).__init__()
+        self.threshold=threshold
+        self.beta = beta
+
+    def forward(self, logit, label):
+
+        threshold = self.threshold
+        beta = self.beta
+        
+        prob = torch.sigmoid(logit)
+        prob = prob > threshold
+        label = label > threshold
+
+        TP = (prob & label).sum(1).float()
+        TN = ((~prob) & (~label)).sum(1).float()
+        FP = (prob & (~label)).sum(1).float()
+        FN = ((~prob) & label).sum(1).float()
+
+        precision = torch.mean(TP / (TP + FP + 1e-12))
+        recall = torch.mean(TP / (TP + FN + 1e-12))
+        F2 = (1 + beta**2) * precision * recall / (beta**2 * precision + recall + 1e-12)
+        
+        return F2.mean(0)
 
 
 

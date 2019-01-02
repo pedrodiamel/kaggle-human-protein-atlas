@@ -79,7 +79,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
         """
 
         cfg_opt= { 'momentum':0.9, 'weight_decay':5e-4 } 
-        cfg_scheduler= { 'step_size':10, 'gamma':0.1  }
+        cfg_scheduler= { 'step_size':100, 'gamma':0.1  }
                     
         super(NeuralNetClassifier, self).create( 
             arch, 
@@ -95,14 +95,15 @@ class NeuralNetClassifier(NeuralNetAbstract):
         )
         
         self.size_input = size_input
-        self.accuracy = nloss.MultAccuracyV1( th )  
+        self.accuracy = nloss.MultAccuracyV1( th ) 
+        self.f_score = nloss.F_score( threshold=th, beta=2 ) 
 
         #self.cnf = nloss.ConfusionMeter( self.num_output_channels, normalized=True )
         #self.visheatmap = gph.HeatMapVisdom( env_name=self.nameproject )
 
         # Set the graphic visualization
-        self.logger_train = Logger( 'Trn', ['loss'], ['acc'], self.plotter  )
-        self.logger_val   = Logger( 'Val', ['loss'], ['acc'], self.plotter )
+        self.logger_train = Logger( 'Trn', ['loss'], ['acc', 'f1'], self.plotter  )
+        self.logger_val   = Logger( 'Val', ['loss'], ['acc', 'f1'], self.plotter )
               
 
     
@@ -128,22 +129,22 @@ class NeuralNetClassifier(NeuralNetAbstract):
                 y = y.cuda()             
 
             # fit (forward)
-            yhat = self.net(x)
-            #yhat = F.sigmoid(yhat)
+            yhat = self.net(x)             
 
             # measure accuracy and record loss
             loss = self.criterion( yhat, y.float()  )            
             pred = self.accuracy( yhat.data, y.data )
+            f1 = self.f_score( yhat.data, y.data )
               
             # optimizer
             self.optimizer.zero_grad()
-            (loss ).backward() # *batch_size
+            (loss ).backward()  
             self.optimizer.step()
                       
             # update
             self.logger_train.update(
                 {'loss': loss.data[0] },
-                {'acc': pred.data[0] },
+                {'acc': pred.data[0], 'f1': f1.data[0] },
                 batch_size,
                 )
             
@@ -178,11 +179,12 @@ class NeuralNetClassifier(NeuralNetAbstract):
                 
                 # fit (forward)
                 yhat = self.net(x)
-                #yhat = F.sigmoid(yhat)
+                
 
                 # measure accuracy and record loss
                 loss = self.criterion(yhat, y.float() )      
                 pred = self.accuracy(yhat.data, y.data ) 
+                f1 = self.f_score( yhat.data, y.data )
 
                 #self.cnf.add( outputs.argmax(1), y ) 
 
@@ -193,7 +195,7 @@ class NeuralNetClassifier(NeuralNetAbstract):
                 # update
                 self.logger_val.update(
                 {'loss': loss.data[0] },
-                {'acc': pred.data[0] },
+                {'acc': pred.data[0], 'f1': f1.data[0] },
                 batch_size,
                 )
 
@@ -265,7 +267,6 @@ class NeuralNetClassifier(NeuralNetAbstract):
             @num_channels (int)
             @pretrained (bool)
         """    
-
         self.net = None
         self.size_input = 0     
         

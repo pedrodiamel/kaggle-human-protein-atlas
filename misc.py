@@ -54,6 +54,7 @@ def get_transforms_aug( size_input ):
         mtrans.ToRandomTransform( mtrans.RandomBrightness( factor=0.25 ), prob=0.50 ),
         mtrans.ToRandomTransform( mtrans.RandomContrast( factor=0.25 ), prob=0.50 ),
         mtrans.ToRandomTransform( mtrans.RandomGamma( factor=0.25 ), prob=0.50 ),
+        #mtrans.ToRandomTransform( mtrans.RandomHueSaturation( hue_shift_limit=(-5, 5), sat_shift_limit=(-11, 11), val_shift_limit=(-11, 11) ), prob=0.30 ),
         #mtrans.ToRandomTransform( mtrans.RandomRGBPermutation(), prob=0.50 ),
         #mtrans.ToRandomTransform( mtrans.CLAHE(), prob=0.25 ),
         #mtrans.ToRandomTransform(mtrans.ToGaussianBlur( sigma=0.05 ), prob=0.25 ),
@@ -65,6 +66,7 @@ def get_transforms_aug( size_input ):
         
         #------------------------------------------------------------------
         mtrans.ToTensor(),
+        #mtrans.RandomElasticTensorDistort( size_grid=20, deform=0.05 ),
         normalize,
         
         ])    

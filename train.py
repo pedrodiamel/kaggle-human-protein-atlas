@@ -18,7 +18,7 @@ from pytvision.transforms import transforms as mtrans
 from pytvision import visualization as view
 
 # LOCAL MODULE
-from torchlib.datasets.datasets import ATLASDataset
+from torchlib.datasets.datasets import ATLASDataset, ATLASExtDataset
 from torchlib.neuralnet import NeuralNetClassifier
 from misc import get_transforms_aug, get_transforms_det
 
@@ -132,12 +132,14 @@ def main():
 
     # datasets
     # training dataset
-    train_data = ATLASDataset(        
+    train_data = ATLASExtDataset(        
         path=args.data, 
         train=True,
         folders_images='train', 
         metadata='train.csv',
-        count=50000,
+        folders_images_external='train_external', 
+        metadata_external='train_external.csv',
+        #count=50000,
         num_channels=args.channels,
         transform=get_transforms_aug( network.size_input ), #get_transforms_aug
         )
@@ -159,7 +161,7 @@ def main():
         )
 
     num_val = len(val_data)
-    val_loader = DataLoader(val_data, batch_size=args.batch_size, 
+    val_loader = DataLoader(val_data, batch_size=80,
         shuffle=False, num_workers=args.workers, pin_memory=network.cuda, drop_last=False)
        
         
