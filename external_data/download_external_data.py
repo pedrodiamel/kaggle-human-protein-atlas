@@ -7,6 +7,7 @@ import pandas as pd
 from PIL import Image
 import shutil
 
+
 def download(pid, image_list, base_url, save_dir, image_size=(512, 512)):
     colors = ['red', 'green', 'blue', 'yellow']
     for i in tqdm(image_list, postfix=pid):
@@ -64,7 +65,5 @@ if __name__ == '__main__':
     shutil.copy( csv_path, os.path.join( path_dataout, '{}.csv'.format(save_name)  ) )
     
     
-    #fusion datasets
-    # ...
-    
     print('DONE!!!')
+
