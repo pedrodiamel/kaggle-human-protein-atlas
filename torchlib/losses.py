@@ -114,20 +114,25 @@ class FocalLossV2(nn.Module):
 #    f1 = tf.where(tf.is_nan(f1), tf.zeros_like(f1), f1)
 #    return 1-K.mean(f1)
 
-def f1_loss(logits, labels):
-    eps = 1e-6
-    beta = 2
-    batch_size = logits.size()[0]
-    p = F.sigmoid(logits)
-    l = labels
-    num_pos = torch.sum(p, 1) + eps
-    num_pos_hat = torch.sum(l, 1) + eps
-    tp = torch.sum(l * p, 1)
-    precise = tp / num_pos
-    recall  = tp / num_pos_hat
-    fs = (1 + beta * beta) * precise * recall / (beta * beta * precise + recall + eps)
-    loss = fs.sum() / batch_size
-    return (1 - loss)
+class F1Loss(nn.Module):    
+    def __init__(self, eps=1e-6, beta=2):
+        super(F1Loss, self).__init__()
+        self.eps = eps 
+        self.beta = beta        
+    def forward(self, logits, labels  ):
+        eps = self.eps
+        beta = self.beta
+        batch_size = logits.size()[0]
+        p = F.sigmoid(logits)
+        l = labels
+        num_pos = torch.sum(p, 1) + eps
+        num_pos_hat = torch.sum(l, 1) + eps
+        tp = torch.sum(l * p, 1)
+        precise = tp / num_pos
+        recall  = tp / num_pos_hat
+        fs = (1 + beta * beta) * precise * recall / (beta * beta * precise + recall + eps)
+        loss = fs.sum() / batch_size
+        return (1 - loss)
 
 
 class DiceLoss(nn.Module):    
@@ -149,7 +154,7 @@ class MixLoss(nn.Module):
         super(MixLoss, self).__init__()
         self.loss_mce = nn.BCEWithLogitsLoss( size_average=True )
         self.loss_dice = DiceLoss()    
-        #self.loss_focal = FocalLoss()
+        self.loss_f1 = F1Loss()
                 
         self.alpha = alpha
         self.gamma = gamma
@@ -159,8 +164,14 @@ class MixLoss(nn.Module):
         gamma = self.gamma
         loss_m  = self.loss_mce( y_pred, y_true)    
         loss_d  = self.loss_dice( y_pred, y_true )     
-        #loss_f  = self.loss_focal( y_pred, y_true )         
-        loss = alpha*loss_m + gamma*loss_d
+        
+        isel = [8, 9, 10, 15, 26, 27]
+        for i in isel:
+            loss_d  += self.loss_dice( y_pred[:,i] , y_true[:,i] ) 
+        loss_d = loss_d/len(isel)
+        
+        loss_f  = self.loss_f1( y_pred, y_true )         
+        loss = alpha*loss_m + gamma*loss_d + loss_f
         return loss
     
     

@@ -38,7 +38,8 @@ def get_transforms_aug( size_input ):
         #------------------------------------------------------------------
         #Resize        
         #mtrans.ToResize( (128, 128), resize_mode='square' ) ,
-        mtrans.ToResize( (size_input, size_input), resize_mode='square', padding_mode=cv2.BORDER_REPLICATE ) ,
+        mtrans.ToResize( (size_input+20, size_input+20), resize_mode='square', padding_mode=cv2.BORDER_REPLICATE ) ,
+        mtrans.RandomCrop( (size_input, size_input), limit=2, padding_mode=cv2.BORDER_REPLICATE  ) ,
                 
         #------------------------------------------------------------------
         #Geometric 
@@ -54,15 +55,13 @@ def get_transforms_aug( size_input ):
         mtrans.ToRandomTransform( mtrans.RandomBrightness( factor=0.25 ), prob=0.50 ),
         mtrans.ToRandomTransform( mtrans.RandomContrast( factor=0.25 ), prob=0.50 ),
         mtrans.ToRandomTransform( mtrans.RandomGamma( factor=0.25 ), prob=0.50 ),
+        
         #mtrans.ToRandomTransform( mtrans.RandomHueSaturation( hue_shift_limit=(-5, 5), sat_shift_limit=(-11, 11), val_shift_limit=(-11, 11) ), prob=0.30 ),
         #mtrans.ToRandomTransform( mtrans.RandomRGBPermutation(), prob=0.50 ),
         #mtrans.ToRandomTransform( mtrans.CLAHE(), prob=0.25 ),
         #mtrans.ToRandomTransform(mtrans.ToGaussianBlur( sigma=0.05 ), prob=0.25 ),
-    
         
-        #------------------------------------------------------------------
-        #Crop 
-        #mtrans.RandomCrop( (size_input, size_input), limit=2, padding_mode=cv2.BORDER_REPLICATE  ) ,
+                
         
         #------------------------------------------------------------------
         mtrans.ToTensor(),

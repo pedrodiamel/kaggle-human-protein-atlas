@@ -8,8 +8,8 @@ import random
 
 # TORCH MODULE
 import torch
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
+from torch.utils.data.sampler import SubsetRandomSampler, WeightedRandomSampler
 from torchvision import transforms, utils
 import torch.backends.cudnn as cudnn
 
@@ -132,20 +132,41 @@ def main():
 
     # datasets
     # training dataset
-    train_data = ATLASExtDataset(        
+
+    train_data_kaggle = ATLASDataset(        
         path=args.data, 
         train=True,
         folders_images='train', 
         metadata='train.csv',
-        folders_images_external='train_external', 
-        metadata_external='train_external.csv',
-        #count=50000,
+        count=20000,
         num_channels=args.channels,
         transform=get_transforms_aug( network.size_input ), #get_transforms_aug
         )
-
+    train_data_external = ATLASDataset(        
+        path=args.data, 
+        train=True,
+        folders_images='train_external', 
+        metadata='train_external.csv',
+        count=20000,
+        num_channels=args.channels,
+        transform=get_transforms_aug( network.size_input ), #get_transforms_aug
+        )    
+    train_data = torch.utils.data.ConcatDataset( [train_data_kaggle, train_data_external] )
+    
+    
+    #mfrec = np.array([0.2375, 0.0375, 0.0875, 0.0375, 0.0125, 0.0375, 0.025, 0.05625,
+    #  0.0, 0.0, 0.0, 0.025, 0.025, 0.0125, 0.025, 0.0, 0.01875, 0.00625,
+    #  0.025, 0.00625, 0.00625, 0.08125, 0.0125, 0.06875, 0.00625, 0.15,
+    #  0.0, 0.0])
+    
+    #frec = np.array([ x for x in train_data_kaggle.data.data['Target'] ]).sum(axis=0)
+    #frec = ((frec/frec.sum() + 0.3)*100).astype( np.uint8 )/100.0
+    #print(frec)
+    #assert(False)
+    
     num_train = len(train_data)
     sampler = SubsetRandomSampler(np.random.permutation( num_train ) ) 
+    #sampler = WeightedRandomSampler( weights=(frec), num_samples=num_train, replacement=True )
     train_loader = DataLoader(train_data, batch_size=args.batch_size, 
         sampler=sampler, num_workers=args.workers, pin_memory=network.cuda, drop_last=True)
     

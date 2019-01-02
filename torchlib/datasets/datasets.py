@@ -102,9 +102,22 @@ class ATLASDataset(object):
         return iD, image, prob 
     
 
+    
 class ATLASExtDataset(object):
     '''
     Management for Human Protein Atlas dataset
+    Example:
+    train_data = ATLASExtDataset(        
+         path=args.data, 
+         train=True,
+         folders_images='train', 
+         metadata='train.csv',
+         folders_images_external='train_external', 
+         metadata_external='train_external.csv',
+         count=50000,
+         num_channels=args.channels,
+         transform=get_transforms_aug( network.size_input ),
+         )    
     '''
 
     idx_to_class = {
@@ -157,25 +170,19 @@ class ATLASExtDataset(object):
                 train,
                 folders_images, 
                 metadata,
-                )
-        
+                )        
         self.data_external = ATLASProvide.create( 
                 path, 
                 train,
                 folders_images_external, 
                 metadata_external,
-                )
-        
+                )        
         
         self.count = len(self.data) + len(self.data_external)
         self.index = np.concatenate( ( np.arange( len(self.data) ), np.arange( len(self.data_external) ) ) )     
-        
         self.transform = transform     
         self.num_channels = num_channels
         
-        
-        
-
     def __len__(self):
         return self.count
     
