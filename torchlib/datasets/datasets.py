@@ -297,12 +297,12 @@ class ExternalArtemtprvDataset(object):
         #image = (image[:,:, 0 ]*255).astype( np.uint8 )
         #image = np.stack( (  image[:,:,0], image[:,:,1]/2 + image[:,:,3]/2, image[:,:,2]/2 + image[:,:,3]/2  ), axis=-1 )
         #image = np.stack( (image), axis=-1 )
-        print("TESTANDO SHAPE")
-        print(image.shape)
+        image=image.reshape((image.shape[1],image.shape[2],image.shape[3]))
+        #print("TESTANDO SHAPE")
+        #print(image.shape)
         #image = np.stack( (image[:,:,0],image[:,:,1],image[:,:,2]) )
-        print(image.shape)
-
-        print("--------------------")
+        #print(image.shape)
+        #print("--------------------")
 
 
         #image = utility.to_channels(image, 3)
@@ -349,7 +349,7 @@ def test():
  
     
     ## Debug img open
-    plt.imshow(image[0], cmap = 'gray', interpolation = 'bicubic')
+    plt.imshow(image, cmap = 'gray', interpolation = 'bicubic')
     plt.xticks([]), plt.yticks([])  # to hide tick values on X and Y axis
     plt.show()
     
