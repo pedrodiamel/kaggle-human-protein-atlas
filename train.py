@@ -26,6 +26,10 @@ from misc import get_transforms_aug, get_transforms_det
 from argparse import ArgumentParser
 import datetime
 
+## Import imbalanced dataset sampler
+from sampler import ImbalancedDatasetSampler
+
+
 def arg_parser():
     """Arg parser"""    
     parser = ArgumentParser()
@@ -165,13 +169,15 @@ def main():
     #assert(False)
     
     num_train = len(train_data)
-    sampler = SubsetRandomSampler(np.random.permutation( num_train ) ) 
+    #sampler = SubsetRandomSampler(np.random.permutation( num_train ) ) 
     #sampler = WeightedRandomSampler( weights=(frec), num_samples=num_train, replacement=True )
+    sampler = ImbalancedDatasetSampler(train_data)
+
     train_loader = DataLoader(train_data, batch_size=args.batch_size, 
         sampler=sampler, num_workers=args.workers, pin_memory=network.cuda, drop_last=True)
     
     # validate dataset
-    val_data = ATLASDataset(        
+    val_data = ATLASDataset(
         path=args.data, 
         train=True,
         folders_images='train', 
