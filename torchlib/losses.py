@@ -165,10 +165,10 @@ class MixLoss(nn.Module):
         loss_m  = self.loss_mce( y_pred, y_true)    
         loss_d  = self.loss_dice( y_pred, y_true )     
         
-        isel = [8, 9, 10, 15, 26, 27]
+        isel = [8,9,10,15,16,17,20,24,26,27] #8,9,10,15,16,17,20,24,26,27 | 8,9,10,15,20,27
         for i in isel:
             loss_d  += self.loss_dice( y_pred[:,i] , y_true[:,i] ) 
-        loss_d = loss_d/len(isel)
+        loss_d = loss_d/(len(isel) - 1)
         
         loss_f  = self.loss_f1( y_pred, y_true )         
         loss = alpha*loss_m + gamma*loss_d + loss_f

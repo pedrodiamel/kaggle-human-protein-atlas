@@ -136,37 +136,42 @@ def main():
     train_data_kaggle = ATLASDataset(        
         path=args.data, 
         train=True,
-        folders_images='train', 
+        folders_images='train', #train, cloud/train_full
         metadata='train.csv',
-        count=20000,
+        ext='png', #png, tif
+        #count=20000,
         num_channels=args.channels,
         transform=get_transforms_aug( network.size_input ), #get_transforms_aug
         )
-    train_data_external = ATLASDataset(        
-        path=args.data, 
-        train=True,
-        folders_images='train_external', 
-        metadata='train_external.csv',
-        count=20000,
-        num_channels=args.channels,
-        transform=get_transforms_aug( network.size_input ), #get_transforms_aug
-        )    
-    train_data = torch.utils.data.ConcatDataset( [train_data_kaggle, train_data_external] )
+    
+#     train_data_external = ATLASDataset(        
+#         path=args.data, 
+#         train=True,
+#         folders_images='train_external', 
+#         metadata='train_external.csv',
+#         #count=20000,
+#         num_channels=args.channels,
+#         transform=get_transforms_aug( network.size_input ), #get_transforms_aug
+#         )    
+#     train_data = torch.utils.data.ConcatDataset( [train_data_kaggle, train_data_external] )
+    train_data = train_data_kaggle
     
     
-    #mfrec = np.array([0.2375, 0.0375, 0.0875, 0.0375, 0.0125, 0.0375, 0.025, 0.05625,
-    #  0.0, 0.0, 0.0, 0.025, 0.025, 0.0125, 0.025, 0.0, 0.01875, 0.00625,
-    #  0.025, 0.00625, 0.00625, 0.08125, 0.0125, 0.06875, 0.00625, 0.15,
-    #  0.0, 0.0])
+    frec = np.array([ x for x in train_data_kaggle.data.data['Target'] ]).sum(axis=0)
+    weights = 1 / frec 
+
+
+#     target_external = train_data_external.data.data['Target']
+    target_kaggle = train_data_kaggle.data.data['Target']
+#     target = np.concatenate( ( target_kaggle, target_external ) )    
+    target = target_kaggle
     
-    #frec = np.array([ x for x in train_data_kaggle.data.data['Target'] ]).sum(axis=0)
-    #frec = ((frec/frec.sum() + 0.3)*100).astype( np.uint8 )/100.0
-    #print(frec)
-    #assert(False)
+    samples_weights = np.array([ weights[ np.array(x).astype( np.uint8 ) ].max() for x in target ])
+    
     
     num_train = len(train_data)
-    sampler = SubsetRandomSampler(np.random.permutation( num_train ) ) 
-    #sampler = WeightedRandomSampler( weights=(frec), num_samples=num_train, replacement=True )
+    #sampler = SubsetRandomSampler(np.random.permutation( num_train ) ) 
+    sampler = WeightedRandomSampler( weights=samples_weights, num_samples=len(samples_weights) , replacement=True )
     train_loader = DataLoader(train_data, batch_size=args.batch_size, 
         sampler=sampler, num_workers=args.workers, pin_memory=network.cuda, drop_last=True)
     
@@ -174,8 +179,9 @@ def main():
     val_data = ATLASDataset(        
         path=args.data, 
         train=True,
-        folders_images='train', 
+        folders_images='train', #train, cloud/train_full
         metadata='train.csv',
+        ext='png', #png, tif
         count=5000,
         num_channels=args.channels,
         transform=get_transforms_det( network.size_input ),

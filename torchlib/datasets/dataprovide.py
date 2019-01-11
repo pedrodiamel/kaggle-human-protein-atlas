@@ -6,12 +6,17 @@ import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import cv2
 
 
-def open_grby( path, id): 
+def open_grby( path, id, ext='png'): 
     '''a function that reads GRBY image'''
     suffs = ['green', 'red', 'blue','yellow']
     cvflag = cv2.IMREAD_GRAYSCALE    
-    img = [cv2.imread(os.path.join( path, '{}_{}.png'.format(id, suff) ), cvflag).astype(np.float32)/255 
-           for suff in suffs ]
+    try:
+        img = [cv2.imread(os.path.join( path, '{}_{}.{}'.format(id, suff, ext) ), cvflag).astype(np.float32)/255 
+               for suff in suffs ]
+    except:
+        print( 'Error: path not exist - {}'.format( os.path.join( path, '{}_{}.{}'.format(id, 'suff', ext))  ) )
+        #assert(False)
+        raise
     return np.stack(img, axis=-1)
 
 def make_dataset( path, metadata, train=True):
@@ -39,11 +44,12 @@ class ATLASProvide( object ):
         train=True,
         folders_images='train',
         metadata='train.csv',
+        ext='png',
         ):
         '''
         Factory function that create an instance of ATLASProvide and load the data form disk.
         '''
-        provide = cls(path, train, folders_images, metadata )
+        provide = cls(path, train, folders_images, metadata, ext )
         return provide
     
     def __init__(self,
@@ -51,13 +57,15 @@ class ATLASProvide( object ):
         train=True,
         folders_images='train',
         metadata='train.csv',
+        ext='png',
         ):
         super(ATLASProvide, self).__init__( )        
-        self.path     = os.path.expanduser( path )
+        self.path            = os.path.expanduser( path )
         self.folders_images  = folders_images
         self.metadata        = metadata
         self.data            = []
         self.train           = train
+        self.ext             = ext
         
         self.data = make_dataset( self.path, self.metadata, self.train )
         
@@ -77,11 +85,11 @@ class ATLASProvide( object ):
         if self.train:           
             image_id = self.data['Id'][i]
             prob = self.data['Target'][i]
-            image_grby = open_grby(  os.path.join(self.path, self.folders_images ), image_id )
+            image_grby = open_grby(  os.path.join(self.path, self.folders_images ), image_id, self.ext )
             return image_id, image_grby, prob
         else:
             image_id = self.data['Id'][i]
-            image_grby = open_grby( os.path.join(self.path, self.folders_images ) , image_id )
+            image_grby = open_grby( os.path.join(self.path, self.folders_images ) , image_id, self.ext )
             return image_id, image_grby, 0
 
         

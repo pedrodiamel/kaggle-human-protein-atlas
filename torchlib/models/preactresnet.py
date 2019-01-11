@@ -75,7 +75,9 @@ class PreActResNet(nn.Module):
         self.layer2 = self._make_layer(block, initial_channels*2, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, initial_channels*4, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, initial_channels*8, num_blocks[3], stride=2)
-        self.linear = nn.Linear( initial_channels*8*block.expansion* 64 , num_classes) # *1(32), *4(64), *16(128), *64(256), *16*16(512)
+        
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
+        self.linear = nn.Linear( initial_channels*8*block.expansion, num_classes) # *1(32), *4(64), *16(128), *64(256), *16*16(512)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
@@ -93,7 +95,9 @@ class PreActResNet(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
-        out = F.avg_pool2d(out, 4)    
+        
+        #out = F.avg_pool2d(out, 4)  
+        out = self.avgpool(out)
         
         #print(out.shape)
         out = out.view(out.size(0), -1)
@@ -141,10 +145,10 @@ def preactresnet152(pretrained=False, **kwargs):
 def test():
     num_channels=3
     num_classes=28
-    imsize=256
+    imsize=512
     net = preactresnet18( False, num_classes=num_classes, num_channels=num_channels )
     y = net(Variable(torch.randn(1,num_channels,imsize,imsize)))
     print(y.size())
 
-#test()
+# test()
 

@@ -79,11 +79,9 @@ class Bottleneck(nn.Module):
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
-
         out = self.conv2(out)
         out = self.bn2(out)
         out = self.relu(out)
-
         out = self.conv3(out)
         out = self.bn3(out)
 
@@ -115,10 +113,11 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, initial_channels*2, layers[1], stride=2)
         self.layer3 = self._make_layer(block, initial_channels*4, layers[2], stride=2)
         self.layer4 = self._make_layer(block, initial_channels*8, layers[3], stride=2)
+        
         self.avgpool = nn.AvgPool2d(7, stride=1)
         #self.avgpool = nn.AdaptiveAvgPool2d(1)
         
-        self.fc = nn.Linear(initial_channels*8*block.expansion *10*10  , num_classes) #* 10*10
+        self.fc = nn.Linear(initial_channels*8*block.expansion* 10*10 , num_classes) #
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):

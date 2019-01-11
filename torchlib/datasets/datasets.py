@@ -65,6 +65,7 @@ class ATLASDataset(object):
                 train,
                 folders_images, 
                 metadata,
+                ext
                 )
         
         self.transform = transform  
@@ -84,6 +85,7 @@ class ATLASDataset(object):
         #image = (image[:,:,:3 ]*255).astype( np.uint8 )
         #image = (image[:,:, 0 ]*255).astype( np.uint8 )
         image = np.stack( (  image[:,:,0], image[:,:,1]/2 + image[:,:,3]/2, image[:,:,2]/2 + image[:,:,3]/2  ), axis=-1 )
+        #image = np.stack( (  image[:,:,0], image[:,:,1], image[:,:,2] ), axis=-1 )
         #image = utility.to_channels(image, 3)
         image = (image*255).astype( np.uint8 )
         
