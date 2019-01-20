@@ -10,9 +10,17 @@ Images visualizing proteins in cells are commonly used for biomedical research, 
 
 ## Results
 
-| Branch   | Name     | CV      | LB    | Description               |
-|---------:|---------:|:-------:|:-----:|:--------------------------|
-| baseline |          |         |       |                           |
+- Dataset: Original + hpa
+- Image  : 512x512
+- Color  : [G, (R+Y)/2, (B+Y)/2]
+- Model  : resnet18; resnet50; se_resnet
+- TTA    : ON
+- Ensamble: ON
+
+
+| Branch   | Name     | LB Pub     | LB Pri    | Description               |
+|---------:|---------:|:----------:|:---------:|:--------------------------|
+| master   |cIN_(oo_) | 0.58       | 0.52      | Top 6% 112/2172           |
 
 
 
