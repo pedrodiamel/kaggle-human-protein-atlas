@@ -6,9 +6,7 @@ Proteins are “the doers” in the human cell, executing many functions that to
 
 Images visualizing proteins in cells are commonly used for biomedical research, and these cells could hold the key for the next breakthrough in medicine. However, thanks to advances in high-throughput microscopy, these images are generated at a far greater pace than what can be manually evaluated. Therefore, the need is greater than ever for automating biomedical image analysis to accelerate the understanding of human cells and disease.
 
-
-
-## Results
+### Protocol:
 
 - Dataset: Original + hpa
 - Image  : 512x512
@@ -17,12 +15,14 @@ Images visualizing proteins in cells are commonly used for biomedical research, 
 - TTA    : ON
 - Ensamble: ON
 
+### Results:
 
 | Branch   | Name     | LB Pub     | LB Pri    | Description               |
 |---------:|---------:|:----------:|:---------:|:--------------------------|
 | master   |cIN_(oo_) | 0.58       | 0.52      | Top 6% 112/2172           |
 
 
+See: https://www.kaggle.com/c/human-protein-atlas-image-classification/leaderboard
 
 
 ## Dataset
