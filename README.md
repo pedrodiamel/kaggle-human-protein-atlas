@@ -16,14 +16,11 @@ Images visualizing proteins in cells are commonly used for biomedical research, 
 - Ensamble: ON
 
 ### Results:
+See: https://www.kaggle.com/c/human-protein-atlas-image-classification/leaderboard
 
 | Branch   | Name     | LB Pub     | LB Pri    | Description               |
 |---------:|---------:|:----------:|:---------:|:--------------------------|
 | master   |cIN_(oo_) | 0.58       | 0.52      | Top 6% 112/2172           |
-
-
-See: https://www.kaggle.com/c/human-protein-atlas-image-classification/leaderboard
-
 
 ## Dataset
 
